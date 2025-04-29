@@ -181,3 +181,84 @@ Mounting a volume:
 podman run -d -p 4300:8080 -v /home/student/volume/:/var/www/html/:Z --name web2 <image_id>
 ```
 
+
+## 🛠️ Création d'une Image à partir d'un Dockerfile
+
+### 📥 Étape 1: Télécharger un Dockerfile
+Utilisez la commande suivante pour télécharger un fichier Dockerfile:
+```bash
+wget <Lien_Dockerfile>
+```
+
+### 🏗️ Étape 2: Création d'une Image
+Créez une image à partir du Dockerfile:
+```bash
+podman build -t <nom_image> <lien_répertoire>
+```
+
+---
+
+## ⚙️ Création d'un Service
+
+### 🖥️ Étape 1: Préparation
+Considérez un conteneur en exécution nommé `web` lancé par l'utilisateur `student`. Connectez-vous à l'utilisateur:
+```bash
+ssh student@localhost
+```
+
+### 📂 Étape 2: Créer le Répertoire Systemd
+```bash
+mkdir -p ~/.config/systemd/user
+cd ~/.config/systemd/user
+```
+
+### 📝 Étape 3: Générer le Fichier Systemd
+Générez un fichier service pour le conteneur:
+```bash
+podman generate systemd --name web --new --files
+```
+Un fichier nommé `container-web.service` sera créé.
+
+### ✏️ Étape 4: Modifier le Fichier Systemd 
+# obligatoire pour la certification non pur le cours 
+Éditez le fichier pour ajouter les lignes suivantes:
+```bash
+vim container-web.service  
+```
+Ajoutez:
+- `Restart=on-failure` ou `Restart=always`
+- `WantedBy=multi-user.target default.target`
+
+#### 📝 Notes sur Systemd:
+- **Targets disponibles**:
+    - `multi-user.target`
+    - `graphical.target`
+- **Changer le target par défaut**:
+    ```bash
+    systemctl set-default multi-user.target
+    ```
+- **Changer le target temporairement**:
+    ```bash
+    systemctl isolate multi-user.target
+    ```
+
+### 🔄 Étape 5: Recharger et Activer le Service
+Rechargez les démons systemd et démarrez le service:
+```bash
+systemctl daemon-reload --user
+systemctl start container-web
+systemctl enable container-web.service --user
+```
+
+### 🔑 Étape 6: Activer Linger pour l'Utilisateur
+Connectez-vous en tant que `root` ou `student`:
+```bash
+su - root
+loginctl enable-linger student
+```
+
+### ✅ Vérification
+Redémarrez la machine et vérifiez le service:
+```bash
+journalctl | grep container-web.service
+```
